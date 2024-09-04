@@ -27,7 +27,15 @@ export default function ImageCanvas({src} : {src: string}) {
     const [scaleWidth, setScaleWidth, scaleWidthRef] = useState(0)
     const [scaleHeight, setScaleHeight, scaleHeightRef] = useState(0)
 
-    const resizeCanvas = () => {
+    useEffect(() => {
+        if (!canvasRef.current) return
+        contextRef.current?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+        for (const rect of rects) {
+            contextRef.current?.strokeRect(rect.startX, rect.startY, rect.rectWidth, rect.rectHeight)
+        }
+    }, [rects])
+
+    function resizeCanvas() {
         const canvas = canvasRef.current
         if (!canvas) return
 
@@ -58,20 +66,16 @@ export default function ImageCanvas({src} : {src: string}) {
         setScaleHeight(scaleHeight)
     }
 
-    const removeLastRect = ({nativeEvent}: React.MouseEvent) => {
+    function removeLastRect({nativeEvent}: React.MouseEvent) {
         nativeEvent.preventDefault()
         nativeEvent.stopPropagation()
 
         const newRects = [...rectsRef.current]
         newRects.pop()
         setRects(newRects)
-        contextRef.current?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-        for (const rect of newRects) {
-            contextRef.current?.strokeRect(rect.startX, rect.startY, rect.rectWidth, rect.rectHeight)
-        }
     }
 
-    const startDrawRect = ({nativeEvent}: React.MouseEvent) => {
+    function startDrawRect({nativeEvent}: React.MouseEvent) {
         nativeEvent.preventDefault()
         nativeEvent.stopPropagation()
 
@@ -84,7 +88,7 @@ export default function ImageCanvas({src} : {src: string}) {
         setIsDrawing(true)
     }
 
-    const drawRect = ({nativeEvent}: React.MouseEvent) => {
+    function drawRect({nativeEvent}: React.MouseEvent) {
         if (!isDrawing) return
         if (!canvasRef.current) return
         
@@ -102,7 +106,7 @@ export default function ImageCanvas({src} : {src: string}) {
         contextRef.current?.strokeRect(startX, startY, rectWidth, rectHeight)
     }
     
-    const stopDrawRect = async ({nativeEvent}: React.MouseEvent) => {
+    function stopDrawRect({nativeEvent}: React.MouseEvent) {
         if (!isDrawing) return
         if (!canvasRef.current) return
 
@@ -120,13 +124,13 @@ export default function ImageCanvas({src} : {src: string}) {
         toast("Scrape box has been added", {
             description: "You can add more boxes by dragging the mouse",
             action: {
-              label: "Undo",
+              label: "Undo last box",
               onClick: removeLastRect,
             },
         })
     }
 
-    const submit = () => {
+    function submit() {
         console.log(rects)
 
         // TODO: send rects, scales and screenshot to backend for scraping (how? idk yet lol maybe use ky or axios and send it as form data)
@@ -146,10 +150,16 @@ export default function ImageCanvas({src} : {src: string}) {
                         onContextMenu={(e)=> e.preventDefault()}>        
                 </canvas>
             </div>
-            <Button className='roboto text-xl'
-                    onClick={submit}>
-                Submit
-            </Button>
+            <div className='flex justify-center gap-5'>
+                <Button className='roboto text-xl text-green-500 hover:bg-green-500 hover:text-gray-950 transition duration-300 ease-in-out'
+                        onClick={submit}>
+                    Submit
+                </Button>
+                <Button className='roboto text-xl bg-red-500 hover:bg-white hover:text-red-500 transition duration-300 ease-in-out'
+                        onClick={()=> setRects([])}>
+                    Clear
+                </Button>
+            </div>
         </>
     )
 }
