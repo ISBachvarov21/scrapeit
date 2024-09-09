@@ -1,0 +1,6 @@
+services:
+  backend:
+    build: .
+    command: sh -c "python src/main.py"
+    ports:
+      - "8000:8000"
